@@ -13,7 +13,6 @@ func JsonError(c *gin.Context, msg interface{}) {
 
 func HandleError(c *gin.Context, err error) bool {
 	if err != nil {
-		//logrus.WithError(err).Error("gin context http handler error")
 		JsonError(c, err.Error())
 		return true
 	}

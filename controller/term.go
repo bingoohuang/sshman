@@ -18,9 +18,7 @@ import (
 var upGrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024 * 1024 * 10,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 type AuthMsg struct {
@@ -113,10 +111,7 @@ func WsSsh(c *gin.Context) {
 		return
 	}
 	common.Client.Lock()
-	common.Client.C[auth.Sid] = &common.MyClient{
-		Uid:  serInfo.BindUser,
-		Sftp: ssConn.SftpClient,
-	}
+	common.Client.C[auth.Sid] = &common.MyClient{Uid: serInfo.BindUser, Sftp: ssConn.SftpClient}
 	common.Client.Unlock()
 	defer func() {
 		common.Client.Lock()
