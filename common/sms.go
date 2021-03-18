@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
+	"github.com/bingoohuang/sshman/config"
 	"log"
 	"math/rand"
 	"regexp"
-	"ssh_manage/config"
 	"time"
 )
 
-var aliconfig = config.Config.Alisms
+var aliconfig = config.Conf.AliSms
 
 func VerifyMobileFormat(mobileNum string) bool {
 	regular := "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$"
@@ -19,7 +19,7 @@ func VerifyMobileFormat(mobileNum string) bool {
 	return reg.MatchString(mobileNum)
 }
 
-func Sendsms(phone string) (captcha string,err error) {
+func Sendsms(phone string) (captcha string, err error) {
 	captcha = createCaptcha()
 	client, err := dysmsapi.NewClientWithAccessKey("cn-hangzhou", aliconfig.Accessid, aliconfig.Accesskey)
 	request := dysmsapi.CreateSendBatchSmsRequest()

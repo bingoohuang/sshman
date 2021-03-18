@@ -22,10 +22,10 @@ func HandleError(c *gin.Context, err error) bool {
 
 func WshandleError(ws *websocket.Conn, err error) bool {
 	if err != nil {
-		log.Println("handler ws ERROR:",err.Error())
+		log.Println("handler ws ERROR:", err.Error())
 		dt := time.Now().Add(time.Second)
 		if err := ws.WriteControl(websocket.CloseMessage, []byte(err.Error()), dt); err != nil {
-			log.Println("websocket writes control message failed:",err.Error())
+			log.Println("websocket writes control message failed:", err.Error())
 		}
 		return true
 	}

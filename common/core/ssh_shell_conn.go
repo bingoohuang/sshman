@@ -98,7 +98,7 @@ func NewSshConn(cols, rows int, sshClient *ssh.Client) (*SshConn, error) {
 	if err := sshSession.Shell(); err != nil {
 		return nil, err
 	}
-	sftpclient, err := sftp.NewClient(sshClient)	//创建一个sftp客户端
+	sftpclient, err := sftp.NewClient(sshClient) //创建一个sftp客户端
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *SshConn) Close() {
 	if s.Session != nil {
 		s.Session.Close()
 	}
-	if s.SftpClient != nil{
+	if s.SftpClient != nil {
 		s.SftpClient.Close()
 	}
 }

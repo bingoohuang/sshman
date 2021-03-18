@@ -1,18 +1,10 @@
 package common
 
 import (
+	"github.com/bingoohuang/sshman/config"
 	"github.com/dgrijalva/jwt-go"
-	"ssh_manage/config"
 	"time"
 )
-
-func init() {
-	if config.Config.Jwt.Key == "ss_jwt_token" {
-		panic("请先修改Jwt key！")
-	}
-}
-
-var jwt_ket = []byte(config.Config.Jwt.Key)
 
 type Claims struct {
 	Userid uint
@@ -20,26 +12,25 @@ type Claims struct {
 }
 
 func ReleaseToken(id uint) (token string, err error) {
-	expire_time := time.Now().Add(3 * 24 * time.Hour)
+	expireTime := time.Now().Add(3 * 24 * time.Hour)
 	claims := &Claims{
 		Userid: id,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expire_time.Unix(),
+			ExpiresAt: expireTime.Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    "admin",
 			Subject:   "user",
 		},
 	}
 	token_obj := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err = token_obj.SignedString(jwt_ket)
+	token, err = token_obj.SignedString([]byte(config.Conf.Jwt.Key))
 	return
 }
 
 func ParseToken(token string) (*Claims, error) {
-
 	//用于解析鉴权的声明，方法内部主要是具体的解码和校验的过程，最终返回*Token
-	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwt_ket, nil
+	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(_ *jwt.Token) (interface{}, error) {
+		return []byte(config.Conf.Jwt.Key), nil
 	})
 
 	if tokenClaims != nil {

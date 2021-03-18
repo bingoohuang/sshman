@@ -1,4 +1,4 @@
-package sftp_clients
+package common
 
 import (
 	"encoding/base64"
@@ -37,13 +37,13 @@ type MyClient struct {
 
 type clients struct {
 	*sync.RWMutex
-	C    map[string]*MyClient
+	C map[string]*MyClient
 }
 
 var Client clients
 
 func init() {
-	Client = clients{new(sync.RWMutex),make(map[string]*MyClient)}
+	Client = clients{new(sync.RWMutex), make(map[string]*MyClient)}
 }
 
 func (c *MyClient) ReceiveWsMsg(wsConn *websocket.Conn, exitCh chan bool) {

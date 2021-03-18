@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bingoohuang/sshman/common"
+	"github.com/bingoohuang/sshman/config"
+	"github.com/bingoohuang/sshman/model"
 	"github.com/garyburd/redigo/redis"
 	"github.com/satori/go.uuid"
 	"log"
-	"ssh_manage/common"
-	"ssh_manage/database"
-	"ssh_manage/model"
 )
 
 type Login struct {
@@ -71,11 +71,11 @@ type SerInfo struct {
 }
 
 func (s *Send) SendCaptcha(ip string) (err error) {
-	cache := database.Cache.Get()
+	cache := config.Cache.Get()
 	defer cache.Close()
-	ipexists, _ := redis.Bool(cache.Do("EXISTS", ip))
-	phoneexists, _ := redis.Bool(cache.Do("EXISTS", s.Phone+"_time"))
-	if ipexists || phoneexists {
+	ipExists, _ := redis.Bool(cache.Do("EXISTS", ip))
+	phoneExists, _ := redis.Bool(cache.Do("EXISTS", s.Phone+"_time"))
+	if ipExists || phoneExists {
 		err = errors.New("请勿频繁发送验证码")
 		return
 	}
@@ -99,22 +99,28 @@ func (l *Login) Verify() (key, code string) {
 
 func (t *GetTerm) Decode(server model.Server) (sid string, err error) {
 	sid = uuid.Must(uuid.NewV4(), nil).String()
-	//log.Println(server)
-	s_pass,err := common.AesDecryptCBC(server.Password, []byte(t.Password))
-	if err != nil{
-		return "",err
+	sPass, err := common.AesDecryptCBC(server.Password, []byte(t.Password))
+	if err != nil {
+		return "", err
 	}
-	if s_pass == "" {
+	if sPass == "" {
 		return "", errors.New("秘钥验证失败")
-	} else {
-		var serinfo = SerInfo{server.ID,server.Ip,server.Port,server.Username,s_pass,server.BindUser}
-		//server.Password = s_pass //用于建立连接
-		cache := database.Cache.Get()
-		defer cache.Close()
-		s_info, _ := json.Marshal(serinfo)
-		//log.Println(string(s_info))
-		cache.Do("SETEX", sid, 10, s_info) //缓存10s，用于建立连接和验证权限
-		//log.Println(sid)
 	}
+
+	serInfo := SerInfo{
+		ID:       server.ID,
+		Ip:       server.Ip,
+		Port:     server.Port,
+		Username: server.Username,
+		Password: sPass,
+		BindUser: server.BindUser,
+	}
+
+	sInfo, _ := json.Marshal(serInfo)
+
+	cache := config.Cache.Get()
+	defer cache.Close()
+	cache.Do("SETEX", sid, 10, sInfo) //缓存10s，用于建立连接和验证权限
+
 	return sid, nil
 }

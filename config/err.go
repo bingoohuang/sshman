@@ -1,4 +1,4 @@
-package errcode
+package config
 
 const (
 	C_nil_err      = 200 //成功

@@ -1,12 +1,11 @@
 package middleware
 
 import (
+	"github.com/bingoohuang/sshman/common"
+	"github.com/bingoohuang/sshman/config"
+	"github.com/bingoohuang/sshman/model"
+	"github.com/bingoohuang/sshman/model/Apiform"
 	"github.com/gin-gonic/gin"
-	"ssh_manage/common"
-	"ssh_manage/database"
-	"ssh_manage/errcode"
-	"ssh_manage/model"
-	"ssh_manage/model/Apiform"
 	"strings"
 	"time"
 )
@@ -18,7 +17,7 @@ func Auth() gin.HandlerFunc {
 		//log.Println(jwt_token)
 		//log.Println(strings.HasPrefix(jwt_token, "Bearer "))
 		if jwtToken == "" || !strings.HasPrefix(jwtToken, "Bearer ") {
-			resp.Code = errcode.S_auth_fmt_err
+			resp.Code = config.S_auth_fmt_err
 			resp.Msg = "Token不正确"
 			c.JSON(200, resp)
 			c.Abort()
@@ -27,7 +26,7 @@ func Auth() gin.HandlerFunc {
 		jwtToken = jwtToken[7:]
 		claims, err := common.ParseToken(jwtToken)
 		if err != nil {
-			resp.Code = errcode.S_auth_err
+			resp.Code = config.S_auth_err
 			resp.Msg = "Token错误，请重新登录"
 			c.JSON(200, resp)
 			c.Abort()
@@ -35,19 +34,19 @@ func Auth() gin.HandlerFunc {
 		}
 		valid := claims.Valid()
 		if valid != nil {
-			resp.Code = errcode.S_auth_err
+			resp.Code = config.S_auth_err
 			resp.Msg = "用户登录超时，请重新登录"
 			c.JSON(200, resp)
 			c.Abort()
 			return
 		}
 		var userInfo model.User
-		db := database.Get()
+		db := config.DB()
 		defer db.Close()
 		userInfo.ID = claims.Userid
-		db.DB.Where(userInfo).First(&userInfo)
+		db.Where(userInfo).First(&userInfo)
 		if userInfo.Phone == 0 {
-			resp.Code = errcode.S_auth_err
+			resp.Code = config.S_auth_err
 			resp.Msg = "用户不存在，请重新登录"
 			c.JSON(200, resp)
 			c.Abort()

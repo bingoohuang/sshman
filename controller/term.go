@@ -3,16 +3,15 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bingoohuang/sshman/common"
+	"github.com/bingoohuang/sshman/common/core"
+	"github.com/bingoohuang/sshman/config"
+	"github.com/bingoohuang/sshman/model/Apiform"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"ssh_manage/common"
-	"ssh_manage/common/core"
-	"ssh_manage/common/sftp_clients"
-	"ssh_manage/database"
-	"ssh_manage/model/Apiform"
 	"strconv"
 )
 
@@ -24,7 +23,7 @@ var upGrader = websocket.Upgrader{
 	},
 }
 
-type Auth_msg struct {
+type AuthMsg struct {
 	Type  string `json:"type"`
 	Token string `json:"token"`
 }
@@ -50,7 +49,7 @@ func WsSsh(c *gin.Context) {
 		return
 	}
 
-	var ser_info Apiform.SerInfo //接收反序列化数据
+	var serInfo Apiform.SerInfo //接收反序列化数据
 	var auth Apiform.WsAuth
 
 	if c.ShouldBindUri(&auth) != nil {
@@ -64,11 +63,9 @@ func WsSsh(c *gin.Context) {
 		if err != nil {
 			log.Println(err.Error())
 			wsConn.Close()
-			//logrus.WithError(err).Error("reading webSocket message failed")
 			return
 		}
-		//unmashal bytes into struct
-		msgObj := Auth_msg{}
+		msgObj := AuthMsg{}
 		if err := json.Unmarshal(wsData, &msgObj); err != nil {
 			log.Println("Auth : unmarshal websocket message failed:", string(wsData))
 			continue
@@ -81,23 +78,20 @@ func WsSsh(c *gin.Context) {
 			wsConn.Close()
 			return
 		}
-		cache := database.Cache.Get()
+		cache := config.Cache.Get()
 		defer cache.Close()
-		//log.Println(auth)
-		s_info, err := redis.Bytes(cache.Do("GET", auth.Sid))
-		//log.Println(string(s_info))
-		if err != nil || len(s_info) == 0 {
+		sInfo, err := redis.Bytes(cache.Do("GET", auth.Sid))
+		if err != nil || len(sInfo) == 0 {
 			wsConn.WriteMessage(websocket.TextMessage, []byte("连接超时，请重试！\r\n"))
 			wsConn.Close()
 			return
 		}
-		if json.Unmarshal(s_info, &ser_info) != nil {
+		if json.Unmarshal(sInfo, &serInfo) != nil {
 			wsConn.WriteMessage(websocket.TextMessage, []byte("服务器信息获取失败，请重试！\r\n"))
 			wsConn.Close()
 			return
 		}
-		//log.Println(ser_info)
-		if claims.Userid != ser_info.BindUser { //验证权限
+		if claims.Userid != serInfo.BindUser { //验证权限
 			wsConn.WriteMessage(websocket.TextMessage, []byte("权限验证失败，请重试！\r\n"))
 			wsConn.Close()
 			return
@@ -105,23 +99,30 @@ func WsSsh(c *gin.Context) {
 		break
 		//break
 	}
-	client, err := core.NewSshClient(core.Server{ser_info.Ip, ser_info.Port, ser_info.Username, ser_info.Password})
+	client, err := core.NewSshClient(core.Server{
+		Ip:     serInfo.Ip,
+		Port:   serInfo.Port,
+		User:   serInfo.Username,
+		Passwd: serInfo.Password,
+	})
 	if core.WshandleError(wsConn, err) {
 		return
 	}
 	defer client.Close()
-	//startTime := time.Now()
 	ssConn, err := core.NewSshConn(cols, rows, client) //加入sftp客户端
 	if core.WshandleError(wsConn, err) {
 		return
 	}
-	sftp_clients.Client.Lock()
-	sftp_clients.Client.C[auth.Sid] = &sftp_clients.MyClient{ser_info.BindUser, ssConn.SftpClient}
-	sftp_clients.Client.Unlock()
+	common.Client.Lock()
+	common.Client.C[auth.Sid] = &common.MyClient{
+		Uid:  serInfo.BindUser,
+		Sftp: ssConn.SftpClient,
+	}
+	common.Client.Unlock()
 	defer func() {
-		sftp_clients.Client.Lock()
-		delete(sftp_clients.Client.C, auth.Sid) //释放SFTP客户端
-		sftp_clients.Client.Unlock()
+		common.Client.Lock()
+		delete(common.Client.C, auth.Sid) //释放SFTP客户端
+		common.Client.Unlock()
 	}()
 	defer ssConn.Close()
 	quitChan := make(chan bool, 3)

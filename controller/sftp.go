@@ -3,14 +3,13 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bingoohuang/sshman/common"
+	"github.com/bingoohuang/sshman/common/core"
+	"github.com/bingoohuang/sshman/config"
+	"github.com/bingoohuang/sshman/model/Apiform"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
-	"ssh_manage/common"
-	"ssh_manage/common/core"
-	"ssh_manage/common/sftp_clients"
-	"ssh_manage/errcode"
-	"ssh_manage/model/Apiform"
 )
 
 type sftp_req struct {
@@ -59,7 +58,7 @@ func Sftp_ssh(c *gin.Context) {
 		claims, err := common.ParseToken(token)
 		valid := claims.Valid()
 		if valid != nil || err != nil {
-			resp_msg.Code = errcode.S_auth_fmt_err
+			resp_msg.Code = config.S_auth_fmt_err
 			resp_msg.Msg = "身份令牌校验不通过"
 			resp_msg.Data = err.Error()
 			msg, _ := json.Marshal(resp_msg)
@@ -69,8 +68,8 @@ func Sftp_ssh(c *gin.Context) {
 			wsConn.Close()
 			return
 		}
-		if claims.Userid != sftp_clients.Client.C[auth.Sid].Uid { //身份与缓存不符合
-			resp_msg.Code = errcode.S_auth_fmt_err
+		if claims.Userid != common.Client.C[auth.Sid].Uid { //身份与缓存不符合
+			resp_msg.Code = config.S_auth_fmt_err
 			resp_msg.Msg = "用户权限不通过"
 			resp_msg.Data = err.Error()
 			msg, _ := json.Marshal(resp_msg)
@@ -81,9 +80,9 @@ func Sftp_ssh(c *gin.Context) {
 			return
 		}
 
-		path, err := sftp_clients.Client.C[auth.Sid].Sftp.Getwd()
+		path, err := common.Client.C[auth.Sid].Sftp.Getwd()
 		if err != nil {
-			resp_msg.Code = errcode.S_send_err
+			resp_msg.Code = config.S_send_err
 			resp_msg.Type = "connect"
 			resp_msg.Msg = "SFTP连接失败"
 			msg, _ := json.Marshal(resp_msg)
@@ -107,7 +106,7 @@ func Sftp_ssh(c *gin.Context) {
 		//break
 	}
 	quitChan := make(chan bool, 2)
-	go sftp_clients.Client.C[auth.Sid].ReceiveWsMsg(wsConn, quitChan)
+	go common.Client.C[auth.Sid].ReceiveWsMsg(wsConn, quitChan)
 	<-quitChan //任意协程退出则结束
 	fmt.Println("Sftp Exit")
 	log.Println("sftp websocket finished")
