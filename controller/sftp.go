@@ -6,7 +6,7 @@ import (
 	"github.com/bingoohuang/sshman/common"
 	"github.com/bingoohuang/sshman/common/core"
 	"github.com/bingoohuang/sshman/config"
-	"github.com/bingoohuang/sshman/model/Apiform"
+	"github.com/bingoohuang/sshman/model/apiform"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
@@ -31,7 +31,7 @@ func Sftp_ssh(c *gin.Context) {
 	}
 	defer wsConn.Close()
 
-	var auth Apiform.WsAuth
+	var auth apiform.WsAuth
 
 	if c.ShouldBindUri(&auth) != nil {
 		wsConn.WriteMessage(websocket.TextMessage, []byte("参数错误\r\n"))

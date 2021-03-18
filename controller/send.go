@@ -3,13 +3,13 @@ package controller
 import (
 	"github.com/bingoohuang/sshman/common"
 	"github.com/bingoohuang/sshman/config"
-	"github.com/bingoohuang/sshman/model/Apiform"
+	"github.com/bingoohuang/sshman/model/apiform"
 	"github.com/gin-gonic/gin"
 )
 
 func Send(c *gin.Context) {
-	var resp Apiform.Resp
-	var send Apiform.Send
+	var resp apiform.Resp
+	var send apiform.Send
 	resp.Code = config.C_phone_err
 	resp.Msg = "手机号未提交！"
 	if c.ShouldBind(&send) == nil {

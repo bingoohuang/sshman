@@ -1,4 +1,4 @@
-package Apiform
+package apiform
 
 import (
 	"encoding/json"

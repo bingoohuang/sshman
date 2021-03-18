@@ -4,18 +4,18 @@ import (
 	"github.com/bingoohuang/sshman/common"
 	"github.com/bingoohuang/sshman/config"
 	"github.com/bingoohuang/sshman/model"
-	"github.com/bingoohuang/sshman/model/Apiform"
+	"github.com/bingoohuang/sshman/model/apiform"
 	"github.com/gin-gonic/gin"
 )
 
 func Addser(c *gin.Context) {
-	var resp Apiform.Resp
+	var resp apiform.Resp
 	newToken := c.MustGet("token").(string)
 	if newToken != "" { //更新Token逻辑
 		resp.Token = newToken
 	}
 	uid := c.MustGet("uid").(uint)
-	var info Apiform.Addser
+	var info apiform.Addser
 	resp.Code = config.C_from_err
 	resp.Msg = "数据错误"
 	if c.ShouldBind(&info) == nil {

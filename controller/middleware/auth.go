@@ -4,7 +4,7 @@ import (
 	"github.com/bingoohuang/sshman/common"
 	"github.com/bingoohuang/sshman/config"
 	"github.com/bingoohuang/sshman/model"
-	"github.com/bingoohuang/sshman/model/Apiform"
+	"github.com/bingoohuang/sshman/model/apiform"
 	"github.com/gin-gonic/gin"
 	"strings"
 	"time"
@@ -12,7 +12,7 @@ import (
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var resp Apiform.Resp
+		var resp apiform.Resp
 		jwtToken := c.GetHeader("Authorization")
 		//log.Println(jwt_token)
 		//log.Println(strings.HasPrefix(jwt_token, "Bearer "))

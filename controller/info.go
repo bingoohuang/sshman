@@ -4,23 +4,23 @@ import (
 	"github.com/Gre-Z/common/jtime"
 	"github.com/bingoohuang/sshman/config"
 	"github.com/bingoohuang/sshman/model"
-	"github.com/bingoohuang/sshman/model/Apiform"
+	"github.com/bingoohuang/sshman/model/apiform"
 	"github.com/gin-gonic/gin"
 	"time"
 )
 
 func Info(c *gin.Context) {
-	var resp Apiform.Resp
+	var resp apiform.Resp
 	newToken := c.MustGet("token").(string)
 	if newToken != "" { //更新Token逻辑
 		resp.Token = newToken
 	}
 	uid := c.MustGet("uid").(uint)
-	var limit Apiform.Slist
+	var limit apiform.Slist
 	if c.MustGet("uid").(uint) > 0 {
 		if c.ShouldBind(&limit) == nil {
 			//var user model.User
-			var list Apiform.List_resp
+			var list apiform.List_resp
 			var server model.Server
 			server.BindUser = uid
 			db := config.DB()
@@ -47,8 +47,8 @@ func Info(c *gin.Context) {
 }
 
 func UpdataNick(c *gin.Context) {
-	var resp Apiform.Resp
-	var edit Apiform.Edit
+	var resp apiform.Resp
+	var edit apiform.Edit
 	newToken := c.MustGet("token").(string)
 	if newToken != "" { //更新Token逻辑
 		resp.Token = newToken
@@ -81,8 +81,8 @@ func UpdataNick(c *gin.Context) {
 }
 
 func ResetPass(c *gin.Context) {
-	var resp Apiform.Resp
-	var edit Apiform.EditPass
+	var resp apiform.Resp
+	var edit apiform.EditPass
 	newToken := c.MustGet("token").(string)
 	if newToken != "" { //更新Token逻辑
 		resp.Token = newToken
@@ -113,8 +113,8 @@ func ResetPass(c *gin.Context) {
 }
 
 func Del(c *gin.Context) {
-	var resp Apiform.Resp
-	var del Apiform.Edit
+	var resp apiform.Resp
+	var del apiform.Edit
 	newToken := c.MustGet("token").(string)
 	if newToken != "" { //更新Token逻辑
 		resp.Token = newToken
@@ -144,8 +144,8 @@ func Del(c *gin.Context) {
 }
 
 func GetTerm(c *gin.Context) {
-	var resp Apiform.Resp
-	var term Apiform.GetTerm
+	var resp apiform.Resp
+	var term apiform.GetTerm
 	newToken := c.MustGet("token").(string)
 	if newToken != "" { //更新Token逻辑
 		resp.Token = newToken

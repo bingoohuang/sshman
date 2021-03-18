@@ -4,15 +4,15 @@ import (
 	"github.com/bingoohuang/sshman/common"
 	"github.com/bingoohuang/sshman/config"
 	"github.com/bingoohuang/sshman/model"
-	"github.com/bingoohuang/sshman/model/Apiform"
+	"github.com/bingoohuang/sshman/model/apiform"
 	"github.com/gin-gonic/gin"
 )
 
 func Login(c *gin.Context) {
-	var resp Apiform.Resp
+	var resp apiform.Resp
 	resp.Code = config.C_from_err
 	resp.Msg = "手机号和验证码不能为空！"
-	var user Apiform.Login
+	var user apiform.Login
 	if c.ShouldBind(&user) == nil {
 		if common.Verify(&user) {
 			var userinfo model.User

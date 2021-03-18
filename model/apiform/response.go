@@ -1,4 +1,4 @@
-package Apiform
+package apiform
 
 type Resp struct {
 	Code  int         `json:"code"`

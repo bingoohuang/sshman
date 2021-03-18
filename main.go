@@ -20,23 +20,6 @@ var staticFs embed.FS
 //go:embed view/*
 var viewFs embed.FS
 
-func redirectLogin(c *gin.Context) {
-	c.Redirect(302, "/login")
-}
-
-func serveViewFile(filepath string) func(c *gin.Context) {
-	return func(c *gin.Context) { c.FileFromFS(filepath, http.FS(viewFs)) }
-}
-
-type prefixFS struct {
-	p string
-	f http.FileSystem
-}
-
-func (a prefixFS) Open(name string) (http.File, error) { return a.f.Open(a.p + name) }
-
-func WithPrefix(prefix string, f http.FileSystem) http.FileSystem { return prefixFS{p: prefix, f: f} }
-
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	configToml := flag.String("conf", "sshman.toml", "config toml file path")
@@ -90,3 +73,20 @@ func main() {
 		log.Panicf("Web Serve Start Err : %v", err)
 	}
 }
+
+func redirectLogin(c *gin.Context) {
+	c.Redirect(302, "/login")
+}
+
+func serveViewFile(filepath string) func(c *gin.Context) {
+	return func(c *gin.Context) { c.FileFromFS(filepath, http.FS(viewFs)) }
+}
+
+type prefixFS struct {
+	p string
+	f http.FileSystem
+}
+
+func (a prefixFS) Open(name string) (http.File, error) { return a.f.Open(a.p + name) }
+
+func WithPrefix(prefix string, f http.FileSystem) http.FileSystem { return prefixFS{p: prefix, f: f} }

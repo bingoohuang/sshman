@@ -6,7 +6,7 @@ import (
 	"github.com/bingoohuang/sshman/common"
 	"github.com/bingoohuang/sshman/common/core"
 	"github.com/bingoohuang/sshman/config"
-	"github.com/bingoohuang/sshman/model/Apiform"
+	"github.com/bingoohuang/sshman/model/apiform"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -49,8 +49,8 @@ func WsSsh(c *gin.Context) {
 		return
 	}
 
-	var serInfo Apiform.SerInfo //接收反序列化数据
-	var auth Apiform.WsAuth
+	var serInfo apiform.SerInfo //接收反序列化数据
+	var auth apiform.WsAuth
 
 	if c.ShouldBindUri(&auth) != nil {
 		wsConn.WriteMessage(websocket.TextMessage, []byte("参数错误\r\n"))
@@ -97,7 +97,6 @@ func WsSsh(c *gin.Context) {
 			return
 		}
 		break
-		//break
 	}
 	client, err := core.NewSshClient(core.Server{
 		Ip:     serInfo.Ip,
