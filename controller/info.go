@@ -23,9 +23,7 @@ func Info(c *gin.Context) {
 			var list apiform.List_resp
 			var server model.Server
 			server.BindUser = uid
-			db := config.DB()
-			defer db.Close()
-			db.Model(&model.Server{}).
+			config.DB.Model(&model.Server{}).
 				Where(&server).
 				Count(&list.Count).
 				Offset((limit.Page - 1) * limit.Limit).
@@ -58,9 +56,7 @@ func UpdataNick(c *gin.Context) {
 		var server model.Server
 		server.ID = edit.ID
 		server.BindUser = uid
-		db := config.DB()
-		defer db.Close()
-		result := db.Model(&model.Server{}).Where(&server).Update(model.Server{
+		result := config.DB.Model(&model.Server{}).Where(&server).Update(model.Server{
 			Nickname: edit.Nickname,
 			Ip:       edit.Ip,
 			Port:     edit.Port,
@@ -93,9 +89,7 @@ func ResetPass(c *gin.Context) {
 		var server model.Server
 		server.ID = edit.ID
 		server.BindUser = uid
-		db := config.DB()
-		defer db.Close()
-		result := db.Model(&model.Server{}).
+		result := config.DB.Model(&model.Server{}).
 			Where(&server).
 			Update(model.Server{Password: edit.Password})
 		if result.RowsAffected == 1 && result.Error == nil {
@@ -124,9 +118,7 @@ func Del(c *gin.Context) {
 		var server model.Server
 		server.ID = del.ID
 		server.BindUser = uid
-		db := config.DB()
-		defer db.Close()
-		result := db.
+		result := config.DB.
 			Where(&server).
 			Delete(&model.Server{})
 		if result.RowsAffected == 1 && result.Error == nil {
@@ -157,11 +149,9 @@ func GetTerm(c *gin.Context) {
 		var server model.Server
 		server.ID = term.ID
 		server.BindUser = uid
-		db := config.DB()
-		defer db.Close()
-		result := db.Model(&model.Server{}).First(&server)
+		result := config.DB.Model(&model.Server{}).First(&server)
 		if result.RowsAffected == 1 && result.Error == nil {
-			db.Model(&model.Server{}).
+			config.DB.Model(&model.Server{}).
 				Where(&server).
 				Update(model.Server{BeforeTime: jtime.JsonTime{Time: time.Now()}})
 			sid, err := term.Decode(server)

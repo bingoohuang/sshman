@@ -41,10 +41,8 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 		var userInfo model.User
-		db := config.DB()
-		defer db.Close()
 		userInfo.ID = claims.Userid
-		db.Where(userInfo).First(&userInfo)
+		config.DB.Where(userInfo).First(&userInfo)
 		if userInfo.Phone == 0 {
 			resp.Code = config.S_auth_err
 			resp.Msg = "用户不存在，请重新登录"

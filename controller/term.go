@@ -26,7 +26,7 @@ type AuthMsg struct {
 	Token string `json:"token"`
 }
 
-// handle webSocket connection.
+// WsSsh handle webSocket connection.
 // first,we establish a ssh connection to ssh server when a webSocket comes;
 // then we deliver ssh data via ssh connection between browser and ssh server.
 // That is, read webSocket data from browser (e.g. 'ls' command) and send data to ssh server via ssh connection;
@@ -51,7 +51,7 @@ func WsSsh(c *gin.Context) {
 	var auth apiform.WsAuth
 
 	if c.ShouldBindUri(&auth) != nil {
-		wsConn.WriteMessage(websocket.TextMessage, []byte("参数错误\r\n"))
+		wsConn.WriteMessage(websocket.BinaryMessage, []byte("参数错误\r\n"))
 		wsConn.Close()
 		return
 	}
@@ -72,7 +72,7 @@ func WsSsh(c *gin.Context) {
 		claims, err := common.ParseToken(token)
 		valid := claims.Valid()
 		if valid != nil || err != nil {
-			wsConn.WriteMessage(websocket.TextMessage, []byte("身份验证失败\r\n"))
+			wsConn.WriteMessage(websocket.BinaryMessage, []byte("身份验证失败\r\n"))
 			wsConn.Close()
 			return
 		}
@@ -80,17 +80,17 @@ func WsSsh(c *gin.Context) {
 		defer cache.Close()
 		sInfo, err := redis.Bytes(cache.Do("GET", auth.Sid))
 		if err != nil || len(sInfo) == 0 {
-			wsConn.WriteMessage(websocket.TextMessage, []byte("连接超时，请重试！\r\n"))
+			wsConn.WriteMessage(websocket.BinaryMessage, []byte("连接超时，请重试！\r\n"))
 			wsConn.Close()
 			return
 		}
 		if json.Unmarshal(sInfo, &serInfo) != nil {
-			wsConn.WriteMessage(websocket.TextMessage, []byte("服务器信息获取失败，请重试！\r\n"))
+			wsConn.WriteMessage(websocket.BinaryMessage, []byte("用户信息获取失败，请重试！\r\n"))
 			wsConn.Close()
 			return
 		}
-		if claims.Userid != serInfo.BindUser { //验证权限
-			wsConn.WriteMessage(websocket.TextMessage, []byte("权限验证失败，请重试！\r\n"))
+		if claims.Userid != serInfo.BindUser { // 验证权限
+			wsConn.WriteMessage(websocket.BinaryMessage, []byte("权限验证失败，请重试！\r\n"))
 			wsConn.Close()
 			return
 		}
@@ -111,7 +111,7 @@ func WsSsh(c *gin.Context) {
 		return
 	}
 	common.Client.Lock()
-	common.Client.C[auth.Sid] = &common.MyClient{Uid: serInfo.BindUser, Sftp: ssConn.SftpClient}
+	common.Client.C[auth.Sid] = &common.SftpClient{Uid: serInfo.BindUser, Sftp: ssConn.SftpClient}
 	common.Client.Unlock()
 	defer func() {
 		common.Client.Lock()

@@ -22,24 +22,12 @@ var viewFs embed.FS
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	configToml := flag.String("conf", "sshman.toml", "config toml file path")
+	conf := flag.String("conf", "sshman.toml", "config toml file path")
 	initial := flag.Bool("init", false, "create example config file sshman.toml")
 	flag.Parse()
 
-	if *initial {
-		configData, err := viewFs.ReadFile("view/sshman.toml")
-		if err != nil {
-			fmt.Printf("read template /view/sshman.toml error %v\n", err)
-		}
-		if err = os.WriteFile("sshman.toml", configData, 0644); err == nil {
-			fmt.Printf("sshman.toml created successfully\n")
-		} else {
-			fmt.Printf("sshman.toml created error %v\n", err)
-		}
-		os.Exit(0)
-	}
-
-	config.LoadConfig(*configToml)
+	setupSampleConfFile(*initial)
+	config.LoadConfig(*conf)
 
 	gin.SetMode(gin.ReleaseMode)
 	gin.DisableConsoleColor()
@@ -72,6 +60,25 @@ func main() {
 	if err := r.Run(config.Conf.Web.Port); err != nil {
 		log.Panicf("Web Serve Start Err : %v", err)
 	}
+}
+
+func setupSampleConfFile(initial bool) {
+	if !initial {
+		return
+	}
+
+	configData, err := viewFs.ReadFile("view/sshman.toml")
+	if err != nil {
+		fmt.Printf("read template /view/sshman.toml error %v\n", err)
+	}
+
+	const confFile = "sshman.toml"
+	if err = os.WriteFile(confFile, configData, 0644); err == nil {
+		fmt.Printf("%s created successfully\n", confFile)
+	} else {
+		fmt.Printf("%s created error %v\n", confFile, err)
+	}
+	os.Exit(0)
 }
 
 func redirectLogin(c *gin.Context) {

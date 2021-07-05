@@ -16,20 +16,13 @@ import (
 
 func NewSshClient(server Server) (*ssh.Client, error) {
 	config := &ssh.ClientConfig{
-		Timeout:         time.Second * 5,
+		Timeout:         time.Second * 90,
 		User:            server.User,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以， 但是不够安全
-		//HostKeyCallback: hostKeyCallBackFunc(h.Host),
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // 这个可以， 但是不够安全
 	}
-	//if h.Type == "password" {
 	config.Auth = []ssh.AuthMethod{ssh.Password(server.Passwd)}
-	//} else {
-	//	config.Auth = []ssh.AuthMethod{publicKeyAuthFunc(h.Key)}
-	//}
 	addr := fmt.Sprintf("%s:%d", server.Ip, server.Port)
 	c, err := ssh.Dial("tcp", addr, config)
-	//s,_ := sftp.NewClient(c)
-	//s.Write()
 	if err != nil {
 		return nil, err
 	}

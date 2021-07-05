@@ -1,5 +1,10 @@
 # sshman
 
+![](https://img.shields.io/github/license/bingoohuang/sshman)
+![](https://img.shields.io/github/stars/bingoohuang/sshman)
+![](https://img.shields.io/github/forks/bingoohuang/sshman)
+![](https://img.shields.io/github/issues/bingoohuang/sshman)
+
 go版本多用户webssh管理工具
 
 服务端不保存用户明文密码，且不保存解密秘钥，如需对其他用户开放，请不要修改此部分代码，以免造成不必要的损失！
@@ -17,8 +22,8 @@ go版本多用户webssh管理工具
 
 ## 开发计划
 
-[-] ssh功能
-[-] sftp文件上传功能
+- [-] ssh功能
+- [-] sftp文件上传功能
 
 ## 环境
 

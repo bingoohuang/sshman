@@ -20,9 +20,7 @@ func Addser(c *gin.Context) {
 	resp.Msg = "数据错误"
 	if c.ShouldBind(&info) == nil {
 		if common.CheckIp(info.Ip) {
-			db := config.DB()
-			defer db.Close()
-			result := db.Create(&model.Server{
+			result := config.DB.Create(&model.Server{
 				Ip:       info.Ip,
 				Port:     info.Port,
 				Username: info.Username,

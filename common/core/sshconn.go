@@ -41,7 +41,7 @@ type wsMsg struct {
 	Rows int    `json:"rows"`
 }
 
-// connect to ssh server using ssh session.
+// SshConn connect to ssh server using ssh session.
 type SshConn struct {
 	// calling Write() to write data into ssh server
 	StdinPipe io.WriteCloser
@@ -54,7 +54,7 @@ type SshConn struct {
 //flushComboOutput flush ssh.session combine output into websocket response
 func flushComboOutput(w *wsBufferWriter, wsConn *websocket.Conn) error {
 	if w.buffer.Len() != 0 {
-		err := wsConn.WriteMessage(websocket.TextMessage, w.buffer.Bytes())
+		err := wsConn.WriteMessage(websocket.BinaryMessage, w.buffer.Bytes())
 		if err != nil {
 			return err
 		}
@@ -63,7 +63,7 @@ func flushComboOutput(w *wsBufferWriter, wsConn *websocket.Conn) error {
 	return nil
 }
 
-// setup ssh shell session
+// NewSshConn setup ssh shell session.
 // set Session and StdinPipe here,
 // and the Session.Stdout and Session.Sdterr are also set.
 func NewSshConn(cols, rows int, sshClient *ssh.Client) (*SshConn, error) {
@@ -114,8 +114,8 @@ func (s *SshConn) Close() {
 	}
 }
 
-//ReceiveWsMsg  receive websocket msg do some handling then write into ssh.session.stdin
-func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, exitCh chan bool) {
+// ReceiveWsMsg  receive websocket msg do some handling then write into ssh.session.stdin
+func (s *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, exitCh chan bool) {
 	//tells other go routine quit
 	defer setQuit(exitCh)
 	for {
@@ -145,7 +145,7 @@ func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, exitCh chan bool) {
 			case wsMsgResize:
 				//handle xterm.js size change
 				if msgObj.Cols > 0 && msgObj.Rows > 0 {
-					if err := ssConn.Session.WindowChange(msgObj.Rows, msgObj.Cols); err != nil {
+					if err := s.Session.WindowChange(msgObj.Rows, msgObj.Cols); err != nil {
 						log.Println("ssh pty change windows size failed")
 						continue
 					}
@@ -158,7 +158,7 @@ func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, exitCh chan bool) {
 					log.Println("websock cmd string base64 decoding failed")
 					continue
 				}
-				if _, err := ssConn.StdinPipe.Write(decodeBytes); err != nil {
+				if _, err := s.StdinPipe.Write(decodeBytes); err != nil {
 					log.Println("ws cmd bytes write to ssh.stdin pipe failed")
 					return
 				}
@@ -166,7 +166,8 @@ func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, exitCh chan bool) {
 		}
 	}
 }
-func (ssConn *SshConn) SendComboOutput(wsConn *websocket.Conn, exitCh chan bool) {
+
+func (s *SshConn) SendComboOutput(wsConn *websocket.Conn, exitCh chan bool) {
 	//tells other go routine quit
 	defer setQuit(exitCh)
 
@@ -178,7 +179,7 @@ func (ssConn *SshConn) SendComboOutput(wsConn *websocket.Conn, exitCh chan bool)
 		select {
 		case <-tick.C:
 			//write combine output bytes into websocket response
-			if err := flushComboOutput(ssConn.ComboOutput, wsConn); err != nil {
+			if err := flushComboOutput(s.ComboOutput, wsConn); err != nil {
 				log.Println(err.Error())
 				//logrus.WithError(err).Error("ssh sending combo output to webSocket failed")
 				return
@@ -189,7 +190,7 @@ func (ssConn *SshConn) SendComboOutput(wsConn *websocket.Conn, exitCh chan bool)
 	}
 }
 
-func (ssConn *SshConn) SessionWait(quitChan chan bool) {
+func (s *SshConn) SessionWait(quitChan chan bool) {
 	//if err := ssConn.Session.Wait(); err != nil {
 	//	log.Println("ssh session wait failed")
 	//	setQuit(quitChan)
@@ -200,7 +201,7 @@ func (ssConn *SshConn) SessionWait(quitChan chan bool) {
 		select {
 		case <-timer.C:
 			{
-				if _, err := ssConn.StdinPipe.Write([]byte{32, 127}); err != nil {
+				if _, err := s.StdinPipe.Write([]byte{32, 127}); err != nil {
 					log.Println("ws cmd bytes write to ssh.stdin pipe failed")
 					return
 				}

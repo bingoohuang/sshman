@@ -16,9 +16,7 @@ func Login(c *gin.Context) {
 	if c.ShouldBind(&user) == nil {
 		if common.Verify(&user) {
 			var userinfo model.User
-			db := config.DB()
-			defer db.Close()
-			db.Where(model.User{Phone: user.Phone}).FirstOrCreate(&userinfo)
+			config.DB.Where(model.User{Phone: user.Phone}).FirstOrCreate(&userinfo)
 			newToken, err := common.ReleaseToken(userinfo.ID)
 			if err == nil && userinfo.ID > 0 {
 				resp.Code = config.C_nil_err
@@ -34,6 +32,5 @@ func Login(c *gin.Context) {
 			resp.Msg = "验证码校验失败"
 		}
 	}
-	//log.Printf(c.ClientIP())
 	c.JSON(200, resp)
 }

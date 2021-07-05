@@ -47,17 +47,19 @@ type webset struct {
 }
 
 var (
-	Conf  = new(conf)
-	DB    func() *gorm.DB
+	Conf = new(conf)
+
 	Cache *redis.Pool
 )
+
+var DB *gorm.DB
 
 func LoadConfig(configFilePath string) {
 	_, err := toml.DecodeFile(configFilePath, Conf)
 	if err != nil {
 		log.Panic(err.Error())
 	}
-	DB = Conf.Database.newDb
+	DB = Conf.Database.newDb()
 	Cache = Conf.Redis.poolInitRedis()
 }
 
@@ -68,7 +70,7 @@ func (d *database) newDb() *gorm.DB {
 	}
 
 	db, err := gorm.Open("mysql",
-		fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&timeout=90s",
 			dsn.Username, dsn.Password, dsn.Host, OrInt(dsn.Port, 3306), dsn.Database))
 	if err != nil {
 		log.Panicf("db open err :%s", err.Error())
